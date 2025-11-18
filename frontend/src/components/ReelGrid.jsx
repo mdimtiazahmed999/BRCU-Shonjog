@@ -33,21 +33,30 @@ export default function ReelGrid() {
     }
   };
 
-  if (reels.length === 0) return null;
-
   return (
-    <div className="grid grid-cols-2 gap-4 my-6">
-      {reels.map((r) => (
-        <div key={r._id} className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-          <div className="w-full bg-gray-50">
-            <video src={r.url} controls className="w-full h-64 object-cover" />
-          </div>
-          <div className="p-3 text-sm text-gray-700">
-            <div className="font-semibold text-gray-900 mb-1">{r.author?.username || 'User'}</div>
-            <div className="text-gray-600">{r.caption || ''}</div>
-          </div>
+    <div className="my-6">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-gray-800">Reels</h4>
+        <small className="text-xs text-gray-500">{reels.length} found</small>
+      </div>
+
+      {reels.length === 0 ? (
+        <div className="py-6 text-center text-gray-500">No reels yet — share a short video to appear here.</div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {reels.map((r) => (
+            <div key={r._id} className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+              <div className="w-full bg-gray-50">
+                <video src={r.url} controls className="w-full h-64 object-cover" />
+              </div>
+              <div className="p-3 text-sm text-gray-700">
+                <div className="font-semibold text-gray-900 mb-1">{r.author?.username || 'User'}</div>
+                <div className="text-gray-600">{r.caption || ''}</div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

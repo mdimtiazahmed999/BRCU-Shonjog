@@ -6,12 +6,13 @@ import chatReducer from './chatSlice';
 import socketReducer from './socketSlice';
 import rtnReducer from './rtnSlice';
 import notificationReducer from './notificationSlice';
+import themeReducer from './themeSlice';
 
 const persistConfig = {
   key: 'root',
   storage,
   version: 1,
-  whitelist: ['auth'],
+  whitelist: ['auth', 'theme'],
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
@@ -23,6 +24,7 @@ const store = configureStore({
     socketio: socketReducer,
     rtn: rtnReducer,
     notification: notificationReducer,
+    theme: themeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

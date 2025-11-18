@@ -9,6 +9,7 @@ import messageRoute from "./routes/message.route.js";
 import postRoute from "./routes/post.route.js";
 import notificationRoute from "./routes/notification.route.js";
 import mediaRoute from "./routes/media.route.js";
+import draftRoute from "./routes/draft.route.js";
 import http from "http";
 import { initSocket } from "./socket/socket.js";
 
@@ -61,6 +62,7 @@ app.use("/api/v1/message", messageRoute);
 app.use("/api/v1/post", postRoute);
 app.use("/api/v1/notification", notificationRoute);
 app.use("/api/v1/media", mediaRoute);
+app.use("/api/v1/draft", draftRoute);
 
 const PORT = process.env.PORT || 8000;
 

@@ -1,4 +1,3 @@
-import sharp from "sharp";
 import cloudinary from "../utils/cloudinary.js";
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
@@ -16,11 +15,19 @@ export const addNewPost = async (req, res) => {
 
         let imageUrl = null;
         if (image) {
-            // image upload 
-            const optimizedImageBuffer = await sharp(image.buffer)
-                .resize({ width: 800, height: 800, fit: 'inside' })
-                .toFormat('jpeg', { quality: 80 })
-                .toBuffer();
+            // try to optimize using sharp if available; fall back to original buffer otherwise
+            let optimizedImageBuffer;
+            try {
+                const mod = await import('sharp');
+                const sharpLib = mod && mod.default ? mod.default : mod;
+                optimizedImageBuffer = await sharpLib(image.buffer)
+                    .resize({ width: 800, height: 800, fit: 'inside' })
+                    .toFormat('jpeg', { quality: 80 })
+                    .toBuffer();
+            } catch (e) {
+                // sharp not installed or failed to load — use original buffer
+                optimizedImageBuffer = image.buffer;
+            }
 
             // buffer to data uri
             const fileUri = `data:image/jpeg;base64,${optimizedImageBuffer.toString('base64')}`;

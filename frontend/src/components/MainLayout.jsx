@@ -5,7 +5,8 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { setAuthUser } from '../redux/authSlice';
 import { addNotification } from '../redux/notificationSlice';
-import { Heart, MessageCircle, Home, User, LogOut, Menu, X, Bell, Send, Search, Plus } from 'lucide-react';
+import { Heart, MessageCircle, Home, User, LogOut, Menu, X, Bell, Send, Search, Plus, Sun, Moon } from 'lucide-react';
+import { toggleTheme } from '../redux/themeSlice';
 import SearchBar from './SearchBar';
 import Notifications from './Notifications';
 import { io } from 'socket.io-client';
@@ -17,8 +18,18 @@ export default function MainLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const theme = useSelector((s) => s.theme?.mode || 'dark');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  // apply theme class on mount / theme change
+  useEffect(() => {
+    try {
+      const root = document.documentElement;
+      if (theme === 'dark') root.classList.add('dark');
+      else root.classList.remove('dark');
+    } catch (e) {}
+  }, [theme]);
 
   useEffect(() => {
     // Connect to socket.io for real-time notifications
@@ -160,6 +171,13 @@ export default function MainLayout() {
               <div>
                 <Notifications />
               </div>
+              <button
+                onClick={() => dispatch(toggleTheme())}
+                title="Toggle theme"
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-700"
+              >
+                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
               <button onClick={() => navigate('/chat')} className="text-gray-600 hover:text-gray-800">
                 <Send size={20} />
               </button>

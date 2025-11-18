@@ -46,23 +46,32 @@ export default function StoryViewer() {
     }
   };
 
-  if (stories.length === 0) return null;
-
   return (
-    <div className="flex gap-3 mb-4 overflow-x-auto">
-      {stories.map((s, idx) => (
-        <div
-          key={s._id}
-          className={`w-24 h-36 rounded overflow-hidden border-2 ${idx === index ? 'border-blue-500' : 'border-gray-700'}`}
-          onClick={() => setIndex(idx)}
-        >
-          {s.type === 'image' ? (
-            <img src={s.url} alt="story" className="w-full h-full object-cover" />
-          ) : (
-            <video src={s.url} className="w-full h-full object-cover" />
-          )}
-        </div>
-      ))}
+    <div className="mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-sm font-semibold text-gray-800">Stories</h4>
+        <small className="text-xs text-gray-500">{stories.length} available</small>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto">
+        {stories.length === 0 ? (
+          <div className="w-full py-6 text-center text-gray-500">No stories yet — upload one to share!</div>
+        ) : (
+          stories.map((s, idx) => (
+            <div
+              key={s._id}
+              className={`w-24 h-36 rounded overflow-hidden ring-2 ${idx === index ? 'ring-sky-500' : 'ring-gray-300'} bg-white`}
+              onClick={() => setIndex(idx)}
+            >
+              {s.type === 'image' ? (
+                <img src={s.url} alt="story" className="w-full h-full object-cover" />
+              ) : (
+                <video src={s.url} className="w-full h-full object-cover" />
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

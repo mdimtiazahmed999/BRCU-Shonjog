@@ -66,11 +66,11 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <div className="text-center py-10 text-white">Loading profile...</div>;
+    return <div className="text-center py-10 text-gray-700">Loading profile...</div>;
   }
 
   if (!profile) {
-    return <div className="text-center py-10 text-white">Profile not found</div>;
+    return <div className="text-center py-10 text-gray-700">Profile not found</div>;
   }
 
   const isOwnProfile = currentUser?._id === profile._id;
@@ -151,7 +151,7 @@ export default function Profile() {
 
       {/* Posts Grid */}
       <div>
-        <h3 className="text-xl font-bold text-white mb-4 px-4">Posts</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-4 px-4">Posts</h3>
         <div className="grid grid-cols-3 gap-2 px-2">
           {profile.posts && profile.posts.length > 0 ? (
             profile.posts.map((post) => (

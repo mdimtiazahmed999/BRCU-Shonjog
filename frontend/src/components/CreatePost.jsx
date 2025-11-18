@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -13,6 +13,117 @@ export default function CreatePost() {
   const [caption, setCaption] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const DRAFT_STORAGE_KEY = 'post:drafts';
+
+  const readDrafts = () => {
+    try { return JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY) || '[]'); } catch (e) { return []; }
+  };
+
+  const saveDraft = () => {
+    if (!previewUrl && !caption.trim()) {
+      toast.error('Nothing to save');
+      return;
+    }
+    const drafts = readDrafts();
+    const id = Date.now().toString();
+    drafts.unshift({ id, caption, previewUrl, fileName: imageFile?.name || null, createdAt: new Date().toISOString() });
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+    toast.success('Draft saved');
+  };
+
+  const deleteDraft = (id) => {
+    const drafts = readDrafts().filter((d) => d.id !== id);
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts));
+  };
+
+  const loadDraft = async (draft) => {
+    setCaption(draft.caption || '');
+    setPreviewUrl(draft.previewUrl || null);
+    // reconstruct File from data url if possible
+    if (draft.previewUrl) {
+      try {
+        const file = dataURLtoFile(draft.previewUrl, draft.fileName || 'image.png');
+        setImageFile(file);
+      } catch (e) {
+        setImageFile(null);
+      }
+    }
+    toast.success('Draft loaded');
+  };
+
+  // Server drafts state
+  const [serverDrafts, setServerDrafts] = useState([]);
+  const autosaveRef = useRef(null);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+
+  const fetchServerDrafts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/draft`, { withCredentials: true });
+      if (res.data && res.data.success) setServerDrafts(res.data.drafts || []);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    if (draftsOpen) fetchServerDrafts();
+  }, [draftsOpen]);
+
+  useEffect(() => {
+    // autosave every 10s when there are changes
+    autosaveRef.current = setInterval(() => {
+      if (caption.trim() || previewUrl) {
+        saveDraftToServer(false).catch(() => {});
+      }
+    }, 10000);
+    return () => clearInterval(autosaveRef.current);
+  }, [caption, previewUrl, imageFile]);
+
+  const saveDraftToServer = async (notify = true) => {
+    try {
+      const fd = new FormData();
+      fd.append('caption', caption || '');
+      if (imageFile) fd.append('image', imageFile);
+      // if previewUrl is an external URL and no file, send caption only (server draft will have no image)
+      const res = await axios.post(`${API_URL}/draft`, fd, { withCredentials: true });
+      if (res.data && res.data.success) {
+        setLastSavedAt(new Date());
+        if (notify) toast.success('Draft saved to server');
+        // refresh server drafts cache
+        fetchServerDrafts();
+        return res.data.draft;
+      }
+      return null;
+    } catch (e) {
+      if (notify) toast.error('Failed to save draft to server');
+      return null;
+    }
+  };
+
+  const loadServerDraft = async (d) => {
+    try {
+      setCaption(d.caption || '');
+      setPreviewUrl(d.image || null);
+      setImageFile(null);
+      setDraftsOpen(false);
+      toast.success('Server draft loaded');
+    } catch (e) {
+      toast.error('Failed to load server draft');
+    }
+  };
+
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
@@ -147,9 +258,33 @@ export default function CreatePost() {
               clearImage();
             }}
             disabled={loading}
-            className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+            className="px-4 py-2 border border-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-50 transition disabled:opacity-50"
           >
             Clear
+          </button>
+          <button
+            type="button"
+            onClick={() => saveDraft()}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            Save Draft
+          </button>
+          <button
+            type="button"
+            onClick={() => saveDraftToServer(true)}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            Save Draft (Server)
+          </button>
+          <button
+            type="button"
+            onClick={() => setDraftsOpen(true)}
+            disabled={loading}
+            className="px-4 py-2 border border-gray-200 text-gray-700 rounded font-semibold hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            Load Draft
           </button>
           <button
             type="submit"
@@ -160,6 +295,55 @@ export default function CreatePost() {
           </button>
         </div>
       </form>
+
+      {/* Drafts Modal */}
+      {draftsOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-md p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Saved Drafts</h3>
+              <button onClick={() => setDraftsOpen(false)} className="text-gray-600">Close</button>
+            </div>
+            <div className="space-y-3 max-h-72 overflow-auto">
+              {readDrafts().length === 0 ? (
+                <div className="text-sm text-gray-500">No drafts saved</div>
+              ) : (
+                readDrafts().map((d) => (
+                  <div key={d.id} className="p-3 border rounded flex items-center gap-3">
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm">{d.fileName || 'Draft'}</div>
+                      <div className="text-xs text-gray-500">{new Date(d.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => { loadDraft(d); setDraftsOpen(false); }} className="px-3 py-1 bg-sky-600 text-white rounded text-sm">Load</button>
+                      <button onClick={() => { deleteDraft(d.id); }} className="px-3 py-1 border rounded text-sm">Delete</button>
+                    </div>
+                  </div>
+                ))
+              )}
+              <div className="border-t pt-3">
+                <h4 className="text-sm font-semibold mb-2">Server Drafts</h4>
+                {serverDrafts.length === 0 ? (
+                  <div className="text-sm text-gray-500">No server drafts</div>
+                ) : (
+                  serverDrafts.map((sd) => (
+                    <div key={sd._id} className="p-3 border rounded flex items-center gap-3 mb-2">
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm">{sd.image ? 'Image draft' : 'Draft'}</div>
+                        <div className="text-xs text-gray-500">{new Date(sd.updatedAt).toLocaleString()}</div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => loadServerDraft(sd)} className="px-3 py-1 bg-sky-600 text-white rounded text-sm">Load</button>
+                        <button onClick={async () => { await axios.delete(`${API_URL}/draft/${sd._id}`, { withCredentials: true }); fetchServerDrafts(); }} className="px-3 py-1 border rounded text-sm">Delete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
