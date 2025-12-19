@@ -22,65 +22,74 @@ export default function Signup() {
 
   const signupHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    // Field validation first
+    if (!input.username || !input.email || !input.password) {
+      toast.error('Please fill all fields');
+      setLoading(false);
+      return;
+    }
+
+    // Email domain + password length checks
+    const lowerEmail = String(input.email).toLowerCase();
+    const allowedDomains = ['@bracu.ac.bd', '@g.bracu.ac.bd'];
+    const hasAllowedDomain = allowedDomains.some((d) => lowerEmail.endsWith(d));
+    if (!hasAllowedDomain) {
+      toast.error('Use a BRACU email (@bracu.ac.bd or @g.bracu.ac.bd)');
+      setLoading(false);
+      return;
+    }
+    if (String(input.password).length < 5) {
+      toast.error('Password must be at least 5 characters long');
+      setLoading(false);
+      return;
+    }
+
+    const USER_API = `${API_URL}/user`;
+
+    // Step 1: Register
     try {
-      setLoading(true);
-
-      // Check if all fields are filled
-      if (!input.username || !input.email || !input.password) {
-        toast.error('Please fill all fields');
-        return;
-      }
-
-      // Client-side validations for email domain and password length
-      const lowerEmail = String(input.email).toLowerCase();
-      const allowedDomains = ['@bracu.ac.bd', '@g.bracu.ac.bd'];
-      const hasAllowedDomain = allowedDomains.some((d) => lowerEmail.endsWith(d));
-      if (!hasAllowedDomain) {
-        toast.error('Use a BRACU email (@bracu.ac.bd or @g.bracu.ac.bd)');
-        return;
-      }
-      if (String(input.password).length < 5) {
-        toast.error('Password must be at least 5 characters long');
-        return;
-      }
-
-      // Register user. Include credentials so cookies (if set at register) are accepted in cross-port dev.
-      const USER_API = `${API_URL}/user`;
       const registerRes = await axios.post(
         `${USER_API}/register`,
-        input,
+        { username: input.username, email: lowerEmail, password: input.password },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           withCredentials: true,
         }
       );
 
-      if (registerRes.data.success) {
-        toast.success(registerRes.data.message);
-        
-        // Auto-login after signup
-        const loginRes = await axios.post(
-          `${USER_API}/login`,
-          { email: input.email, password: input.password },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            withCredentials: true,
-          }
-        );
-
-        if (loginRes.data.success) {
-          dispatch(setAuthUser(loginRes.data.user));
-          navigate('/');
-          toast.success(loginRes.data.message);
-        }
+      if (!registerRes.data?.success) {
+        throw new Error(registerRes.data?.message || 'Registration failed');
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Signup failed');
-      console.log(error);
+      toast.success(registerRes.data.message || 'Account created');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Signup failed');
+      console.log(err);
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: Auto-login (best effort). If this fails, show explicit message.
+    try {
+      const loginRes = await axios.post(
+        `${USER_API}/login`,
+        { email: lowerEmail, password: input.password },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
+      if (loginRes.data?.success) {
+        dispatch(setAuthUser(loginRes.data.user));
+        navigate('/');
+        toast.success(loginRes.data.message || 'Logged in');
+      } else {
+        toast.error('Account created, but auto‑login failed. Please log in.');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Account created, but auto‑login failed. Please log in.');
+      console.log(err);
     } finally {
       setLoading(false);
     }

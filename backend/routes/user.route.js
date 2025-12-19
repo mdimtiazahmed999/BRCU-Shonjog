@@ -15,6 +15,7 @@ import {
     rejectFollowRequest,
     changePassword,
     changeEmail,
+    deleteAccount,
 } from "../controllers/user.controller.js";
 import { resendVerification } from '../controllers/verify.controller.js';
 import isAuthenticated from "../middlewares/isAuthenticated.js";
@@ -30,6 +31,7 @@ router.route('/:id/profile').get(isAuthenticated, getProfile);
 router.route('/profile/edit').post(isAuthenticated, upload.single('profilePicture'), editProfile);
 router.route('/change-password').post(isAuthenticated, changePassword);
 router.route('/change-email').post(isAuthenticated, changeEmail);
+router.route('/delete-account').post(isAuthenticated, deleteAccount);
 router.route('/suggested').get(isAuthenticated, getSuggestedUsers);
 router.route('/search').get(isAuthenticated, searchUsers);
 router.route('/verify').get(verifyEmail);

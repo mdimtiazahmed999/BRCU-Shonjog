@@ -247,9 +247,30 @@ export default function MainLayout() {
                     Change Password
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm('Are you sure you want to delete your account? This cannot be undone.')) {
-                        toast.error('Delete account feature coming soon');
+                        try {
+                          const response = await fetch('http://localhost:8000/api/v1/user/delete-account', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                              'Content-Type': 'application/json'
+                            }
+                          });
+                          const data = await response.json();
+                          if (data.success) {
+                            toast.success('Account deleted successfully');
+                            // Redirect to login after a short delay
+                            setTimeout(() => {
+                              window.location.href = '/login';
+                            }, 1000);
+                          } else {
+                            toast.error(data.message || 'Failed to delete account');
+                          }
+                        } catch (error) {
+                          console.error('Delete account error:', error);
+                          toast.error('Failed to delete account');
+                        }
                       }
                       setProfileMenuOpen(false);
                     }}

@@ -4,6 +4,7 @@ import { sendVerificationEmail } from '../utils/email.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Post } from "../models/post.model.js";
+import { Comment } from "../models/comment.model.js";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 export const register = async (req, res) => {
@@ -563,16 +564,20 @@ export const changeEmail = async (req, res) => {
             });
         }
 
-        // enforce same domain policy as registration unless ALLOW_ALL_EMAILS is set
-        const lowerEmail = String(newEmail).toLowerCase();
+        // enforce allowed email domains unless ALLOW_ALL_EMAILS is set
+        const lowerEmail = String(newEmail).toLowerCase().trim();
         const allowAll = String(process.env.ALLOW_ALL_EMAILS || '').toLowerCase() === 'true';
         if (!allowAll) {
-            const envList = process.env.ALLOWED_EMAIL_DOMAINS || '@bracu.ac.bd,@g.bracu.ac.bd';
-            const allowedDomains = envList.split(',').map(d => d.trim()).filter(Boolean);
+            // By default allow both student and main domains
+            const envList = process.env.ALLOWED_EMAIL_DOMAINS || '@g.bracu.ac.bd,@bracu.ac.bd';
+            const allowedDomains = envList
+                .split(',')
+                .map((d) => d.trim().toLowerCase())
+                .filter(Boolean);
             const hasAllowedDomain = allowedDomains.some((d) => lowerEmail.endsWith(d));
             if (!hasAllowedDomain) {
                 return res.status(400).json({
-                    message: 'Email change is restricted by domain policy. Use a permitted email address.',
+                    message: 'Email must use @g.bracu.ac.bd or @bracu.ac.bd.',
                     success: false,
                 });
             }
@@ -657,12 +662,29 @@ export const changePassword = async (req, res) => {
             });
         }
 
+        // Reject if new equals current (plain-text check to short-circuit)
+        if (String(oldPassword || '') === String(newPassword || '')) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password is already in use'
+            });
+        }
+
         // Verify old password
         const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isPasswordMatch) {
             return res.status(400).json({
                 success: false,
                 message: 'Incorrect current password'
+            });
+        }
+
+        // Extra safety: ensure new password isn't the same as current hashed value
+        const isSameAsCurrent = await bcrypt.compare(newPassword, user.password);
+        if (isSameAsCurrent) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password is already in use'
             });
         }
 
@@ -676,6 +698,70 @@ export const changePassword = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'Password changed successfully'
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.id;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Delete all user's posts and associated comments
+        const posts = await Post.find({ author: userId });
+        for (const post of posts) {
+            await Post.findByIdAndDelete(post._id);
+            await Comment.deleteMany({ post: post._id });
+        }
+
+        // Delete all user's stories
+        const { Story } = await import('../models/story.model.js');
+        await Story.deleteMany({ author: userId });
+
+        // Delete all user's reels
+        const { Reel } = await import('../models/reel.model.js');
+        await Reel.deleteMany({ author: userId });
+
+        // Delete all user's drafts
+        const { Draft } = await import('../models/draft.model.js');
+        await Draft.deleteMany({ author: userId });
+
+        // Delete all user's messages and conversations
+        const { Conversation } = await import('../models/conversation.model.js');
+        await Conversation.deleteMany({ participants: userId });
+
+        // Delete all user's notifications
+        const { Notification } = await import('../models/notification.model.js');
+        await Notification.deleteMany({ $or: [{ user: userId }, { from: userId }] });
+
+        // Delete user's follow requests
+        const { FollowRequest } = await import('../models/followRequest.model.js');
+        await FollowRequest.deleteMany({ $or: [{ sender: userId }, { recipient: userId }] });
+
+        // Remove user from other users' followers/following
+        await User.updateMany({ followers: userId }, { $pull: { followers: userId } });
+        await User.updateMany({ following: userId }, { $pull: { following: userId } });
+
+        // Delete the user account
+        await User.findByIdAndDelete(userId);
+
+        // Clear authentication cookie
+        return res.cookie('token', '', { maxAge: 0 }).status(200).json({
+            success: true,
+            message: 'Account deleted successfully'
         });
     } catch (error) {
         console.log(error);

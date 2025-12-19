@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { Heart, MessageCircle, Bookmark, Trash2, Send } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Send, MoreVertical } from 'lucide-react';
 import StoryViewer from './StoryViewer';
 import StoryUploader from './StoryUploader';
 import ReelGrid from './ReelGrid';
@@ -27,6 +27,8 @@ export default function Home() {
   const [sharePostId, setSharePostId] = useState(null);
   const [followers, setFollowers] = useState([]);
   const [loadingFollowers, setLoadingFollowers] = useState(false);
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [editPost, setEditPost] = useState(null); // { id, caption }
 
   const goToProfile = (authorId) => {
     if (authorId) navigate(`/profile/${authorId}`);
@@ -183,7 +185,7 @@ export default function Home() {
 
   const dislikeHandler = async (postId) => {
     try {
-      const res = await axios.get(`${API_URL}/${postId}/dislike`, {
+      const res = await axios.get(`${POST_API}/${postId}/dislike`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -207,7 +209,7 @@ export default function Home() {
 
   const bookmarkHandler = async (postId) => {
     try {
-      const res = await axios.get(`${API_URL}/${postId}/bookmark`, {
+      const res = await axios.get(`${POST_API}/${postId}/bookmark`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -227,7 +229,7 @@ export default function Home() {
 
   const deletePostHandler = async (postId) => {
     try {
-      const res = await axios.delete(`${API_URL}/delete/${postId}`, {
+      const res = await axios.delete(`${POST_API}/delete/${postId}`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -236,6 +238,31 @@ export default function Home() {
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const openEditModal = (post) => {
+    setEditPost({ id: post._id, caption: post.caption || '' });
+    setMenuOpenId(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editPost) return;
+    try {
+      const res = await axios.put(
+        `${POST_API}/edit/${editPost.id}`,
+        { caption: editPost.caption },
+        { withCredentials: true }
+      );
+      if (res.data.success) {
+        const updated = res.data.post;
+        setPosts((prev) => prev.map((p) => (p._id === updated._id ? { ...p, caption: updated.caption, image: updated.image } : p)));
+        toast.success('Post updated');
+        setEditPost(null);
+      }
+    } catch (e) {
+      console.log(e);
+      toast.error('Failed to update post');
     }
   };
 
@@ -248,7 +275,7 @@ export default function Home() {
       }
 
       const res = await axios.post(
-        `${API_URL}/${postId}/comment`,
+        `${POST_API}/${postId}/comment`,
         { text: commentText },
         { withCredentials: true }
       );
@@ -312,12 +339,30 @@ export default function Home() {
                   </div>
                 </div>
                 {post.author && post.author._id === userId && (
-                  <button
-                    onClick={() => deletePostHandler(post._id)}
-                    className="text-red-500 hover:text-red-400"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => setMenuOpenId(menuOpenId === post._id ? null : post._id)}
+                      className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+                    {menuOpenId === post._id && (
+                      <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-10">
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                          onClick={() => openEditModal(post)}
+                        >
+                          Edit Post
+                        </button>
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => { setMenuOpenId(null); deletePostHandler(post._id); }}
+                        >
+                          Delete Post
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -438,6 +483,33 @@ export default function Home() {
 
       {/* Share Post Modal */}
       {/* Removed for now - feature simplified */}
+
+      {/* Edit Post Modal */}
+      <EditPostModal editPost={editPost} setEditPost={setEditPost} onSave={saveEdit} />
+    </div>
+  );
+}
+
+// Edit Post Modal
+// Rendered at the bottom to avoid layout issues
+export function EditPostModal({ editPost, setEditPost, onSave }) {
+  if (!editPost) return null;
+  return (
+    <div className="fixed inset-0 z-20 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={() => setEditPost(null)}></div>
+      <div className="relative bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-4 w-full max-w-md mx-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Edit Post</h3>
+        <textarea
+          value={editPost.caption}
+          onChange={(e) => setEditPost({ ...editPost, caption: e.target.value })}
+          className="w-full h-32 resize-none bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 text-sm text-gray-800 dark:text-gray-200"
+          placeholder="Update your caption"
+        />
+        <div className="mt-4 flex justify-end gap-2">
+          <button className="px-3 py-2 text-sm" onClick={() => setEditPost(null)}>Cancel</button>
+          <button className="px-3 py-2 text-sm bg-sky-600 text-white rounded-md" onClick={onSave}>Save</button>
+        </div>
+      </div>
     </div>
   );
 }
