@@ -3,8 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Image, X } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function CreatePost({ onCreated }) {
   const dispatch = useDispatch();

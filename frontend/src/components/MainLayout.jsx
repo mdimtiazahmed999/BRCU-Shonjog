@@ -12,9 +12,7 @@ import Notifications from './Notifications';
 import ChangeEmailModal from './ChangeEmailModal';
 import ChangePasswordModal from './ChangePasswordModal';
 import { io } from 'socket.io-client';
-
-const API_URL = 'http://localhost:8000/api/v1';
-const SOCKET_URL = 'http://localhost:8000';
+import { API_URL, SOCKET_URL } from '../lib/config';
 
 export default function MainLayout() {
   const dispatch = useDispatch();

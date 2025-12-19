@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Heart, MessageCircle, Bookmark } from 'lucide-react';
 import parseCaptionToElements from '../lib/parseCaptionToElements.jsx';
-
-const API_URL = 'http://localhost:8000/api/v1/post';
+import { API_URL } from '../lib/config';
+const POST_API = `${API_URL}/post`;
 
 export default function Saved() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function Saved() {
   const fetchSavedPosts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/saved`, {
+      const res = await axios.get(`${POST_API}/saved`, {
         withCredentials: true,
       });
 
@@ -41,7 +41,7 @@ export default function Saved() {
 
   const removeSavedPost = async (postId) => {
     try {
-      const res = await axios.get(`${API_URL}/${postId}/bookmark`, {
+      const res = await axios.get(`${POST_API}/${postId}/bookmark`, {
         withCredentials: true,
       });
       if (res.data.success) {

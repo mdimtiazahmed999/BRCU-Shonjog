@@ -5,8 +5,7 @@ import { getSocketInstance } from '../lib/socketManager';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Send } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function ChatPage() {
   const { user } = useSelector((state) => state.auth);

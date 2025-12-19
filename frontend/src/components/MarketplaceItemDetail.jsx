@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { ArrowLeft, MapPin, DollarSign, Package, MessageCircle, Trash2, Edit, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000/api/v1/marketplace';
+import { API_URL } from '../lib/config';
+const MARKET_API = `${API_URL}/marketplace`;
 
 export default function MarketplaceItemDetail() {
   const { id } = useParams();
@@ -25,7 +25,7 @@ export default function MarketplaceItemDetail() {
   const fetchListingDetail = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/${id}`, {
+      const res = await axios.get(`${MARKET_API}/${id}`, {
         withCredentials: true,
       });
 
@@ -50,7 +50,7 @@ export default function MarketplaceItemDetail() {
     try {
       setSendingMessage(true);
       const res = await axios.post(
-        `http://localhost:8000/api/v1/message/send/${listing.seller._id}`,
+        `${API_URL}/message/send/${listing.seller._id}`,
         {
           textMessage: `${message}\n\n[Regarding: ${listing.title} - $${listing.price}]`,
         },
@@ -83,7 +83,7 @@ export default function MarketplaceItemDetail() {
     if (!window.confirm('Are you sure you want to delete this listing?')) return;
 
     try {
-      const res = await axios.delete(`${API_URL}/${id}`, {
+      const res = await axios.delete(`${MARKET_API}/${id}`, {
         withCredentials: true,
       });
 

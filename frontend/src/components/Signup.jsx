@@ -4,8 +4,7 @@ import { useDispatch } from 'react-redux';
 import { setAuthUser } from '../redux/authSlice';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-const API_URL = 'http://localhost:8000/api/v1/user';
+import { API_URL } from '../lib/config';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -46,8 +45,9 @@ export default function Signup() {
       }
 
       // Register user. Include credentials so cookies (if set at register) are accepted in cross-port dev.
+      const USER_API = `${API_URL}/user`;
       const registerRes = await axios.post(
-        `${API_URL}/register`,
+        `${USER_API}/register`,
         input,
         {
           headers: {
@@ -62,7 +62,7 @@ export default function Signup() {
         
         // Auto-login after signup
         const loginRes = await axios.post(
-          `${API_URL}/login`,
+          `${USER_API}/login`,
           { email: input.email, password: input.password },
           {
             headers: {

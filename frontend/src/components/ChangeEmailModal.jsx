@@ -4,8 +4,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setAuthUser } from '../redux/authSlice';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function ChangeEmailModal({ isOpen, onClose }) {
   const dispatch = useDispatch();

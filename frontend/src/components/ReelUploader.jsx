@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { X, Upload, Film } from 'lucide-react';
-
-const API = 'http://localhost:8000/api/v1/media';
+import { API_URL } from '../lib/config';
+const MEDIA_API = `${API_URL}/media`;
 
 export default function ReelUploader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function ReelUploader() {
     fd.append('media', file);
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/reel`, fd, { withCredentials: true });
+      const res = await axios.post(`${MEDIA_API}/reel`, fd, { withCredentials: true });
       if (res.data.success) {
         toast.success('Reel uploaded successfully! 🎬');
         setFile(null);

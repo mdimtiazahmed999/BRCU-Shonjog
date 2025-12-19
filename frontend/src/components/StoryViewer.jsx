@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import StoryModal from './StoryModal';
-
-const API = 'http://localhost:8000/api/v1/media';
+import { API_URL } from '../lib/config';
+const MEDIA_API = `${API_URL}/media`;
 
 export default function StoryViewer() {
   const [stories, setStories] = useState([]);
@@ -32,7 +32,7 @@ export default function StoryViewer() {
 
   const fetchStories = async () => {
     try {
-      const res = await axios.get(`${API}/story/all`, { withCredentials: true });
+      const res = await axios.get(`${MEDIA_API}/story/all`, { withCredentials: true });
       if (res.data.success) {
         // normalize field names to frontend-friendly shape
         const normalized = (res.data.stories || []).map((st) => ({

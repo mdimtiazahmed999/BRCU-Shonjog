@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-
-const API = 'http://localhost:8000/api/v1/media';
+import { API_URL } from '../lib/config';
+const MEDIA_API = `${API_URL}/media`;
 
 export default function ReelGrid() {
   const [reels, setReels] = useState([]);
@@ -17,7 +17,7 @@ export default function ReelGrid() {
 
   const fetchReels = async () => {
     try {
-      const res = await axios.get(`${API}/reel/all`, { withCredentials: true });
+      const res = await axios.get(`${MEDIA_API}/reel/all`, { withCredentials: true });
       if (res.data.success) {
         // normalize to use r.url for frontend
         const normalized = (res.data.reels || []).map((r) => ({

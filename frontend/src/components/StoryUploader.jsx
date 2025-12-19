@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { X, Upload, Image, Play } from 'lucide-react';
-
-const API = 'http://localhost:8000/api/v1/media';
+import { API_URL } from '../lib/config';
+const MEDIA_API = `${API_URL}/media`;
 
 export default function StoryUploader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,7 +34,7 @@ export default function StoryUploader() {
     }
     try {
       setLoading(true);
-      const res = await axios.post(`${API}/story`, fd, { withCredentials: true });
+      const res = await axios.post(`${MEDIA_API}/story`, fd, { withCredentials: true });
       if (res.data.success) {
         toast.success('Story uploaded successfully! 🎉');
         setFile(null);
@@ -62,13 +62,13 @@ export default function StoryUploader() {
   const [scheduledList, setScheduledList] = useState([]);
   const fetchScheduled = async () => {
     try {
-      const res = await axios.get('http://localhost:8000/api/v1/media/story/scheduled', { withCredentials: true });
+      const res = await axios.get(`${MEDIA_API}/story/scheduled`, { withCredentials: true });
       if (res.data.success) setScheduledList(res.data.stories || []);
     } catch (e) { console.log(e); }
   };
   const cancelScheduled = async (id) => {
     try {
-      const res = await axios.delete(`http://localhost:8000/api/v1/media/story/scheduled/${id}`, { withCredentials: true });
+      const res = await axios.delete(`${MEDIA_API}/story/scheduled/${id}`, { withCredentials: true });
       if (res.data.success) {
         toast.success('Cancelled scheduled story');
         fetchScheduled();

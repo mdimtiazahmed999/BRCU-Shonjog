@@ -8,8 +8,7 @@ import {
   clearNotifications,
   addNotification,
 } from '../redux/notificationSlice';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function Notifications() {
   const dispatch = useDispatch();

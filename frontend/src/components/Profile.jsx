@@ -5,8 +5,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { Heart, MessageCircle, ArrowLeft, Bookmark, Settings, Trash2, Pencil } from 'lucide-react';
 import CreatePost from './CreatePost';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 const POST_API = `${API_URL}/post`;
 
 export default function Profile() {

@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const API = 'http://localhost:8000/api/v1/media';
+import { API_URL } from '../lib/config';
+const MEDIA_API = `${API_URL}/media`;
 
 export default function StoryModal({ stories, initialIndex, onClose, onStoryDeleted }) {
   const { user } = useSelector((state) => state.auth);
@@ -58,7 +58,7 @@ export default function StoryModal({ stories, initialIndex, onClose, onStoryDele
 
     setIsDeleting(true);
     try {
-      const res = await axios.delete(`${API}/story/${currentStory._id}`, {
+      const res = await axios.delete(`${MEDIA_API}/story/${currentStory._id}`, {
         withCredentials: true,
       });
 

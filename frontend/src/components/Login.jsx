@@ -4,8 +4,7 @@ import { useDispatch } from 'react-redux';
 import { setAuthUser } from '../redux/authSlice';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-const API_URL = 'http://localhost:8000/api/v1/user';
+import { API_URL } from '../lib/config';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,7 +23,8 @@ export default function Login() {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(`${API_URL}/login`, input, {
+      const USER_API = `${API_URL}/user`;
+      const res = await axios.post(`${USER_API}/login`, input, {
         headers: {
           'Content-Type': 'application/json',
         },

@@ -5,8 +5,7 @@ import axios from 'axios';
 import { toast } from 'sonner';
 import { setAuthUser } from '../redux/authSlice';
 import { ArrowLeft } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function EditProfile() {
   const navigate = useNavigate();

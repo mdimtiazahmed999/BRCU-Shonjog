@@ -22,6 +22,7 @@ import { setLikeNotification } from './redux/rtnSlice'
 import { setAuthUser } from './redux/authSlice'
 import ProtectedRoutes from './components/ProtectedRoutes'
 import RehydrationGate from './components/RehydrationGate'
+import { API_URL, SOCKET_URL } from './lib/config'
 
 
 const browserRouter = createBrowserRouter([
@@ -94,7 +95,7 @@ function App() {
   useEffect(() => {
     const verifyAuth = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/user/me', {
+        const response = await fetch(`${API_URL}/user/me`, {
           method: 'GET',
           credentials: 'include', // include cookies
           headers: {
@@ -139,7 +140,7 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      const socketio = io('http://localhost:8000', {
+      const socketio = io(SOCKET_URL, {
         query: { userId: user?._id },
         transports: ['websocket'],
       });

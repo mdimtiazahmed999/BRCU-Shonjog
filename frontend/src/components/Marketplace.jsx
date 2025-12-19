@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Plus, Search, MapPin, DollarSign, Package, MessageCircle, Trash2, Edit, X } from 'lucide-react';
-
-const API_URL = 'http://localhost:8000/api/v1/marketplace';
+import { API_URL } from '../lib/config';
+const MARKET_API = `${API_URL}/marketplace`;
 
 const CATEGORIES = ['All', 'Electronics', 'Clothing', 'Home & Garden', 'Sports', 'Books', 'Vehicles', 'Services', 'Other'];
 
@@ -42,7 +42,7 @@ export default function Marketplace() {
       if (searchQuery) params.append('search', searchQuery);
       if (showAvailableOnly) params.append('available', 'true');
 
-      const res = await axios.get(`${API_URL}/all?${params.toString()}`, {
+      const res = await axios.get(`${MARKET_API}/all?${params.toString()}`, {
         withCredentials: true,
       });
 
@@ -59,7 +59,7 @@ export default function Marketplace() {
 
   const fetchMyListings = async () => {
     try {
-      const res = await axios.get(`${API_URL}/my-listings`, {
+      const res = await axios.get(`${MARKET_API}/my-listings`, {
         withCredentials: true,
       });
 
@@ -112,7 +112,7 @@ export default function Marketplace() {
         formData.append('images', image);
       });
 
-      const res = await axios.post(`${API_URL}/create`, formData, {
+      const res = await axios.post(`${MARKET_API}/create`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
@@ -141,7 +141,7 @@ export default function Marketplace() {
 
   const handleMarkAsSold = async (id) => {
     try {
-      const res = await axios.put(`${API_URL}/${id}/mark-sold`, {}, {
+      const res = await axios.put(`${MARKET_API}/${id}/mark-sold`, {}, {
         withCredentials: true,
       });
 
@@ -160,7 +160,7 @@ export default function Marketplace() {
     if (!confirm('Are you sure you want to delete this listing?')) return;
 
     try {
-      const res = await axios.delete(`${API_URL}/${id}`, {
+      const res = await axios.delete(`${MARKET_API}/${id}`, {
         withCredentials: true,
       });
 

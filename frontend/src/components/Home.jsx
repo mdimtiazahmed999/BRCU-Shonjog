@@ -9,8 +9,8 @@ import StoryUploader from './StoryUploader';
 import ReelGrid from './ReelGrid';
 import ReelUploader from './ReelUploader';
 import parseCaptionToElements from '../lib/parseCaptionToElements.jsx';
-
-const API_URL = 'http://localhost:8000/api/v1/post';
+import { API_URL } from '../lib/config';
+const POST_API = `${API_URL}/post`;
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -36,7 +36,7 @@ export default function Home() {
     try {
       setLoadingFollowers(true);
       // Get current user's followers
-      const res = await axios.get(`http://localhost:8000/api/v1/user/${userId}/profile`, {
+      const res = await axios.get(`${API_URL}/user/${userId}/profile`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -47,7 +47,7 @@ export default function Home() {
           const followerDetails = await Promise.all(
             followerList.map(async (followerId) => {
               try {
-                const userRes = await axios.get(`http://localhost:8000/api/v1/user/${followerId}/profile`, {
+                const userRes = await axios.get(`${API_URL}/user/${followerId}/profile`, {
                   withCredentials: true,
                 });
                 return userRes.data.user;
@@ -83,7 +83,7 @@ export default function Home() {
       const message = `Check out this post: ${post.caption || 'A post from ' + post.author.username}\n\n${post.image ? '[Post has an image]' : ''}`;
       
       await axios.post(
-        `http://localhost:8000/api/v1/message/send/${userId}`,
+        `${API_URL}/message/send/${userId}`,
         {
           textMessage: message,
         },
@@ -113,7 +113,7 @@ export default function Home() {
 
   const fetchBookmarkedPosts = async () => {
     try {
-      const res = await axios.get(`${API_URL}/saved`, {
+      const res = await axios.get(`${POST_API}/saved`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -130,7 +130,7 @@ export default function Home() {
       if (targetPage === 1) setLoading(true);
       else setLoadingMore(true);
 
-      const res = await axios.get(`${API_URL}/all?page=${targetPage}&limit=10`, {
+      const res = await axios.get(`${POST_API}/all?page=${targetPage}&limit=10`, {
         withCredentials: true,
       });
       if (res.data.success) {
@@ -155,7 +155,7 @@ export default function Home() {
 
   const likeHandler = async (postId) => {
     try {
-      const res = await axios.get(`${API_URL}/${postId}/like`, {
+      const res = await axios.get(`${POST_API}/${postId}/like`, {
         withCredentials: true,
       });
       if (res.data.success) {

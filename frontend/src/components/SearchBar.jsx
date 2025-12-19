@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function SearchBar() {
   const navigate = useNavigate();

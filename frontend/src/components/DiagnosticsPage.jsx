@@ -14,7 +14,7 @@ export default function DiagnosticsPage() {
       try {
         // Test 1: Backend connectivity
         try {
-          const backendRes = await axios.get('http://localhost:8000/', { timeout: 3000 });
+          const backendRes = await axios.get(`${window.location.origin}/`, { timeout: 3000 });
           setDiagnostics(prev => ({
             ...prev,
             backendConnectivity: `✅ Backend responding: ${JSON.stringify(backendRes.data)}`

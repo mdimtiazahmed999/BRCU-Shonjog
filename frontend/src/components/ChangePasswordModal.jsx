@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
-
-const API_URL = 'http://localhost:8000/api/v1';
+import { API_URL } from '../lib/config';
 
 export default function ChangePasswordModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
